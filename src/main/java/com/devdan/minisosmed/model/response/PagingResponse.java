@@ -1,6 +1,5 @@
 package com.devdan.minisosmed.model.response;
 
-
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -10,11 +9,9 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class WebResponse<T> {
+public class PagingResponse {
 
-    private T data;
-
-    private String errors;
-
-    private PagingResponse pagingResponse;
+    private Integer currentPage;
+    private Integer totalPage;
+    private Integer size;
 }
