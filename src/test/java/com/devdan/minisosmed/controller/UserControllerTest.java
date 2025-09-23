@@ -2,6 +2,7 @@ package com.devdan.minisosmed.controller;
 
 import com.devdan.minisosmed.entity.User;
 import com.devdan.minisosmed.model.request.RegisterUserRequest;
+import com.devdan.minisosmed.model.response.UserResponse;
 import com.devdan.minisosmed.model.response.WebResponse;
 import com.devdan.minisosmed.repository.UserRepository;
 import com.devdan.minisosmed.resolver.JwtUtil;
@@ -20,8 +21,8 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest
@@ -119,6 +120,75 @@ class UserControllerTest {
                         .content(objectMapper.writeValueAsString(request))
         ).andExpectAll(
                 status().isBadRequest()
+        ).andDo(result ->{
+            WebResponse<String> response = objectMapper.readValue(result.getResponse().getContentAsString(), new TypeReference<>() {
+            });
+
+            assertNotNull(response.getErrors());
+        });
+    }
+
+    @Test
+    void getUserUnauthirizedTokenNotSend() throws Exception{
+        mockMvc.perform(
+                get("/api/users/me")
+                        .accept(MediaType.APPLICATION_JSON_VALUE)
+        ).andExpectAll(
+                status().isUnauthorized()
+        ).andDo(result ->{
+            WebResponse<String> response = objectMapper.readValue(result.getResponse().getContentAsString(), new TypeReference<>() {
+            });
+
+            assertNotNull(response.getErrors());
+        });
+    }
+
+    @Test
+    void getUserSuccess() throws Exception{
+        User user = new User();
+        user.setName("Test");
+        user.setEmail("test@example.com");
+        user.setUsername("test");
+        user.setPassword(passwordEncoder.encode("admin"));
+
+        String token = jwtUtil.generatedToken(user);
+
+        userRepository.save(user);
+
+        mockMvc.perform(
+                get("/api/users/me")
+                        .accept(MediaType.APPLICATION_JSON_VALUE)
+                        .header("Authorization", token)
+        ).andExpectAll(
+                status().isOk()
+        ).andDo(result ->{
+            WebResponse<UserResponse> response = objectMapper.readValue(result.getResponse().getContentAsString(), new TypeReference<>() {
+            });
+
+            assertNull(response.getErrors());
+            assertEquals("test", response.getData().getUsername());
+            assertEquals("test@example.com", response.getData().getEmail());
+            assertEquals("Test", response.getData().getName());
+        });
+    }
+
+    @Test
+    void getUserTokenExpired() throws Exception{
+        User user = new User();
+        user.setName("Test");
+        user.setUsername("test");
+        user.setEmail("test@example.com");
+        user.setPassword(passwordEncoder.encode("admin"));
+        userRepository.save(user);
+
+        String expiredToken = jwtUtil.generateTokenWithExpiration("test", -1000);
+
+        mockMvc.perform(
+                get("/api/users/me")
+                        .accept(MediaType.APPLICATION_JSON_VALUE)
+                        .header("Authorization", expiredToken)
+        ).andExpectAll(
+                status().isUnauthorized()
         ).andDo(result ->{
             WebResponse<String> response = objectMapper.readValue(result.getResponse().getContentAsString(), new TypeReference<>() {
             });
