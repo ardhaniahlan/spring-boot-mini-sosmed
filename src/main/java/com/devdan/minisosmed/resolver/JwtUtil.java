@@ -25,7 +25,7 @@ public class JwtUtil {
         Date exp = new Date(expMillis);
 
         return Jwts.builder()
-                .setSubject(user.getUsername())
+                .setSubject(user.getId())
                 .claim("username", user.getUsername())
                 .claim("email", user.getEmail())
                 .setIssuer("devdan-app")
@@ -59,13 +59,13 @@ public class JwtUtil {
         }
     }
 
-    public String generateTokenWithExpiration(String username, long expirationMillis) {
+    public String generateTokenWithExpiration(String userId, long expirationMillis) {
         long nowMillis = System.currentTimeMillis();
         long expMillis = nowMillis + expirationMillis;
         Date exp = new Date(expMillis);
 
         return Jwts.builder()
-                .setSubject(username)
+                .setSubject(userId)
                 .setIssuedAt(new Date(nowMillis))
                 .setExpiration(exp)
                 .setIssuer("devdan-app")

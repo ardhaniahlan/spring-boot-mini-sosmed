@@ -17,6 +17,8 @@ import org.springframework.http.MediaType;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.web.servlet.MockMvc;
 
+import java.util.UUID;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
@@ -49,6 +51,7 @@ class AuthControllerTest {
     @Test
     void testLoginUsernameSuccess() throws Exception {
         User user = new User();
+        user.setId(UUID.randomUUID().toString());
         user.setName("Test");
         user.setUsername("test");
         user.setEmail("test@example.com");
@@ -73,7 +76,7 @@ class AuthControllerTest {
             assertNotNull(response.getData().getToken());
             assertNotNull(response.getData().getExpiredAt());
 
-            User userDb = userRepository.findById("test").orElse(null);
+            User userDb = userRepository.findById(user.getId()).orElse(null);
             assertNotNull(userDb);
 
         });
@@ -82,6 +85,7 @@ class AuthControllerTest {
     @Test
     void testLoginEmailSuccess() throws Exception {
         User user = new User();
+        user.setId(UUID.randomUUID().toString());
         user.setName("Test");
         user.setUsername("test");
         user.setEmail("test@example.com");
@@ -106,7 +110,7 @@ class AuthControllerTest {
             assertNotNull(response.getData().getToken());
             assertNotNull(response.getData().getExpiredAt());
 
-            User userDb = userRepository.findById("test").orElse(null);
+            User userDb = userRepository.findById(user.getId()).orElse(null);
             assertNotNull(userDb);
 
         });
@@ -135,6 +139,7 @@ class AuthControllerTest {
     @Test
     void testLoginFailedWrongPassword() throws Exception {
         User user = new User();
+        user.setId(UUID.randomUUID().toString());
         user.setUsername("test");
         user.setEmail("ardhan@example.com");
         user.setPassword(passwordEncoder.encode("admin"));
@@ -175,8 +180,8 @@ class AuthControllerTest {
 
     @Test
     void logoutSuccess() throws Exception{
-
         User user = new User();
+        user.setId(UUID.randomUUID().toString());
         user.setName("Ardhan");
         user.setUsername("test");
         user.setEmail("test@example.com");
@@ -197,7 +202,7 @@ class AuthControllerTest {
             assertNull(response.getErrors());
             assertEquals("OK", response.getData());
 
-            User userDB = userRepository.findById("test").orElse(null);
+            User userDB = userRepository.findById(user.getId()).orElse(null);
             assertNotNull(userDB);
         });
     }

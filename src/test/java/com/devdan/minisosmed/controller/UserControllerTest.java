@@ -2,6 +2,7 @@ package com.devdan.minisosmed.controller;
 
 import com.devdan.minisosmed.entity.User;
 import com.devdan.minisosmed.model.request.RegisterUserRequest;
+import com.devdan.minisosmed.model.request.UpdateUserRequest;
 import com.devdan.minisosmed.model.response.UserResponse;
 import com.devdan.minisosmed.model.response.WebResponse;
 import com.devdan.minisosmed.repository.UserRepository;
@@ -16,6 +17,8 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.web.servlet.MockMvc;
+
+import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -101,6 +104,7 @@ class UserControllerTest {
     void testRegisterDuplicated() throws Exception{
 
         User user = new User();
+        user.setId(UUID.randomUUID().toString());
         user.setUsername("test");
         user.setEmail("test@example.com");
         user.setPassword(passwordEncoder.encode("admin"));
@@ -146,6 +150,7 @@ class UserControllerTest {
     @Test
     void getUserSuccess() throws Exception{
         User user = new User();
+        user.setId(UUID.randomUUID().toString());
         user.setName("Test");
         user.setEmail("test@example.com");
         user.setUsername("test");
@@ -175,6 +180,7 @@ class UserControllerTest {
     @Test
     void getUserTokenExpired() throws Exception{
         User user = new User();
+        user.setId(UUID.randomUUID().toString());
         user.setName("Test");
         user.setUsername("test");
         user.setEmail("test@example.com");
@@ -194,6 +200,65 @@ class UserControllerTest {
             });
 
             assertNotNull(response.getErrors());
+        });
+    }
+
+    @Test
+    void updateUserUnauthirized() throws Exception{
+
+        UpdateUserRequest request = new UpdateUserRequest();
+
+        mockMvc.perform(
+                patch("/api/users/me")
+                        .accept(MediaType.APPLICATION_JSON_VALUE)
+                        .contentType(MediaType.APPLICATION_JSON_VALUE)
+                        .content(objectMapper.writeValueAsString(request))
+        ).andExpectAll(
+                status().isUnauthorized()
+        ).andDo(result ->{
+            WebResponse<String> response = objectMapper.readValue(result.getResponse().getContentAsString(), new TypeReference<>() {
+            });
+
+            assertNotNull(response.getErrors());
+        });
+    }
+
+    @Test
+    void updateUserSuccess() throws Exception{
+        User user = new User();
+        user.setId(UUID.randomUUID().toString());
+        user.setName("Test");
+        user.setUsername("test");
+        user.setEmail("test@example.com");
+        user.setPassword(passwordEncoder.encode("admin"));
+        userRepository.save(user);
+
+        String token = jwtUtil.generatedToken(user);
+
+        UpdateUserRequest request = new UpdateUserRequest();
+        request.setUsername("haha");
+        request.setName("Ardhan");
+        request.setPassword("admin123");
+
+        mockMvc.perform(
+                patch("/api/users/me")
+                        .accept(MediaType.APPLICATION_JSON_VALUE)
+                        .contentType(MediaType.APPLICATION_JSON_VALUE)
+                        .content(objectMapper.writeValueAsString(request))
+                        .header("Authorization", token)
+        ).andExpectAll(
+                status().isOk()
+        ).andDo(result ->{
+            WebResponse<UserResponse> response = objectMapper.readValue(result.getResponse().getContentAsString(), new TypeReference<>() {
+            });
+
+            assertNull(response.getErrors());
+            assertEquals(request.getName(), response.getData().getName());
+            assertEquals(request.getUsername(), response.getData().getUsername());
+
+            User userDB = userRepository.findById(user.getId()).orElse(null);
+            assertNotNull(userDB);
+            assertTrue(passwordEncoder.matches("admin123", userDB.getPassword()));
         });
     }
 }

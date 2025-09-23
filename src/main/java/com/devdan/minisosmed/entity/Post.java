@@ -30,7 +30,7 @@ public class Post {
     private String createdAt;
 
     @ManyToOne()
-    @JoinColumn(name = "username", referencedColumnName = "username")
+    @JoinColumn(name = "user_id", referencedColumnName = "id")
     private User user;
 
     @OneToMany(mappedBy = "post")
