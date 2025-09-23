@@ -33,6 +33,12 @@ create table likes(
     id VARCHAR(100) NOT NULL,
     post_id VARCHAR(100) NOT NULL,
     username VARCHAR(100) NOT NULL,
-    foreign key fk_users_comment (username) references users (username),
-    foreign key fk_posts_comment (post_id) references posts (id)
+    foreign key fk_users_likes (username) references users (username),
+    foreign key fk_posts_likes (post_id) references posts (id)
 ) ENGINE InnoDB;
+
+select * from users;
+select * from posts;
+select * from comments;
+select * from likes;
+
