@@ -417,6 +417,43 @@ class PostControllerTest {
     }
 
     @Test
+    void testDeletePostNotCurrentUser() throws Exception {
+        User user = userRepository.findByUsername("test").orElseThrow();
+        String token = jwtUtil.generatedToken(user);
+
+        User notUserCurrent = new User();
+        notUserCurrent.setId(UUID.randomUUID().toString());
+        notUserCurrent.setUsername("haha");
+        notUserCurrent.setEmail("test2@example.com");
+        notUserCurrent.setPassword(passwordEncoder.encode("admin"));
+        notUserCurrent.setName("haha");
+        userRepository.save(notUserCurrent);
+
+        Post post = new Post();
+        post.setId(UUID.randomUUID().toString());
+        post.setBody("Haiiiii");
+        post.setCreatedAt(String.valueOf(System.currentTimeMillis()));
+        post.setUser(notUserCurrent);
+        postRepository.save(post);
+
+        mockMvc.perform(
+                        delete("/api/posts/" + post.getId())
+                                .accept(MediaType.APPLICATION_JSON_VALUE)
+                                .contentType(MediaType.APPLICATION_JSON_VALUE)
+                                .header("Authorization", token)
+                ).andExpect(status().isForbidden())
+                .andDo(result -> {
+                    WebResponse<String> response = objectMapper.readValue(
+                            result.getResponse().getContentAsString(),
+                            new TypeReference<>() {}
+                    );
+                    assertNotNull(response.getErrors());
+                    assertTrue(postRepository.existsById(post.getId()));
+                });
+    }
+
+
+    @Test
     void testUpdatePostSuccess() throws Exception{
         User user = userRepository.findByUsername("test").orElseThrow();
         String token = jwtUtil.generatedToken(user);

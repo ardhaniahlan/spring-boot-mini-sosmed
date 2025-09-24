@@ -87,8 +87,13 @@ public class PostService {
 
     @Transactional
     public void delete(User user, String postId){
-        Post post = postRepository.findByIdAndUser(postId, user)
+        Post post = postRepository.findById(postId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Post not found"));
+
+        if (!post.getUser().getId().equals(user.getId())){
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Not your post");
+        }
+
         postRepository.delete(post);
     }
 

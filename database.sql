@@ -95,4 +95,4 @@ WHERE
     AND table_name = 'likes'
     AND constraint_type = 'FOREIGN KEY';
 
-ALTER TABLE posts DROP COLUMN username;
+ALTER TABLE comments DROP COLUMN username;
