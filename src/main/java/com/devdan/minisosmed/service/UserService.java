@@ -45,7 +45,7 @@ public class UserService {
         user.setUsername(request.getUsername());
         user.setEmail(request.getEmail());
         user.setName(request.getName());
-        user.setPassword(request.getPassword());
+        user.setPassword(passwordEncoder.encode(request.getPassword()));
         userRepository.save(user);
     }
 
@@ -76,6 +76,7 @@ public class UserService {
 
     public UserResponse toUserResponse(User user){
         return UserResponse.builder()
+                .id(user.getId())
                 .username(user.getUsername())
                 .name(user.getName())
                 .email(user.getEmail())

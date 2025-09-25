@@ -5,6 +5,7 @@ import com.devdan.minisosmed.entity.Post;
 import com.devdan.minisosmed.entity.User;
 import com.devdan.minisosmed.model.request.CreateCommentRequest;
 import com.devdan.minisosmed.model.response.CommentResponse;
+import com.devdan.minisosmed.model.response.PostResponse;
 import com.devdan.minisosmed.model.response.WebResponse;
 import com.devdan.minisosmed.repository.CommentRepository;
 import com.devdan.minisosmed.repository.PostRepository;
@@ -21,6 +22,7 @@ import org.springframework.http.MediaType;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.web.servlet.MockMvc;
 
+import java.util.List;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -215,6 +217,40 @@ class CommentControllerTest {
                     assertNotNull(response.getErrors());
                     assertTrue(commentRepository.existsById(comment.getId()));
                 });
+    }
+
+    @Test
+    void testGetAllCommenttByPostIdSuccess() throws Exception {
+        User user = userRepository.findByUsername("test").orElseThrow();
+        String token = jwtUtil.generatedToken(user);
+
+        Post post = postRepository.findById("ssss").orElseThrow();
+
+        for (int i = 0; i < 3; i++) {
+            Comment comment = new Comment();
+            comment.setId(UUID.randomUUID().toString());
+            comment.setBody("Haiiiii" + i);
+            comment.setCreatedAt(String.valueOf(System.currentTimeMillis()));
+            comment.setUser(user);
+            comment.setPost(post);
+            commentRepository.save(comment);
+        }
+
+        mockMvc.perform(
+                get("/api/posts/" + post.getId() + "/comments")
+                        .accept(MediaType.APPLICATION_JSON_VALUE)
+                        .header("Authorization", token)
+        ).andExpectAll(
+                status().isOk()
+        ).andDo(result -> {
+            WebResponse<List<CommentResponse>> response = objectMapper.readValue(
+                    result.getResponse().getContentAsString(),
+                    new TypeReference<>() {}
+            );
+
+            assertNull(response.getErrors());
+            assertEquals(3, response.getData().size());
+        });
     }
 
 }

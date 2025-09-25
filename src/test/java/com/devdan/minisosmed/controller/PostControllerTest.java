@@ -258,7 +258,6 @@ class PostControllerTest {
         User user = userRepository.findByUsername("test").orElseThrow();
         String token = jwtUtil.generatedToken(user);
 
-        // Simpan beberapa post untuk targetUser
         for (int i = 0; i < 3; i++) {
             Post post = new Post();
             post.setId(UUID.randomUUID().toString());
@@ -268,7 +267,6 @@ class PostControllerTest {
             post.setCreatedAt(String.valueOf(System.currentTimeMillis()));
             postRepository.save(post);
         }
-
 
         mockMvc.perform(
                 get("/api/users/" + user.getId() + "/posts")
